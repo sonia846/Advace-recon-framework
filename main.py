@@ -1,6 +1,7 @@
 import sys
 import time
 import socket
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 def banner():
@@ -16,11 +17,9 @@ def banner():
 
 # ==================== ADVANCED PORT SCANNER MODULE ====================
 def scan_single_port(target_ip, port):
-    """Aik akele port ko check karne aur uski service pakadne ka smart function"""
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(1.0)
-        
         result = s.connect_ex((target_ip, port))
         if result == 0:
             try:
@@ -29,7 +28,6 @@ def scan_single_port(target_ip, port):
                 service_info = f"OPEN --> Banner: {banner_reply[:40]}"
             except:
                 service_info = "OPEN (Service active)"
-                
             print(f"[+] Port {port:<5}: {service_info}")
         s.close()
     except:
@@ -38,13 +36,8 @@ def scan_single_port(target_ip, port):
 def advanced_port_scanner():
     print("\n" + "="*20 + " SMART PORT SCANNER " + "="*20)
     target = input("[?] Enter Target Domain or IP (e.g., scanme.nmap.org): ")
-    
-    if not target:
-        print("[-] Target cannot be empty!")
-        return
-
+    if not target: return
     try:
-        print(f"\n[*] Resolving target DNS...")
         target_ip = socket.gethostbyname(target)
         print(f"[+] Target IP Address: {target_ip}")
     except socket.gaierror:
@@ -62,15 +55,51 @@ def advanced_port_scanner():
         ports_to_scan = list(range(1, 101))
 
     print(f"\n[*] Scanning started at: {time.strftime('%H:%M:%S')}")
-    print("[*] Using Multithreading Engine (Super Fast Mode)...")
-    print("-" * 50)
-
     with ThreadPoolExecutor(max_workers=50) as executor:
         for port in ports_to_scan:
             executor.submit(scan_single_port, target_ip, port)
+    input("\nPress Enter to return to Main Menu...")
+
+# ==================== DIRECTORY BRUTEFORCER MODULE ====================
+def check_directory(target_url, folder):
+    # Har ek directory ko web request bhej kar check karne ka function
+    if not target_url.endswith('/'):
+        target_url += '/'
+    
+    url = f"{target_url}{folder}"
+    try:
+        # Request bhejna bina browser ke
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=2.0) as response:
+            if response.status == 200:
+                print(f"[+] FOUND: {url} (Status: 200 OK)")
+    except urllib.error.HTTPError as e:
+        if e.code == 403:
+            print(f"[!] FORBIDDEN: {url} (Status: 403 Restricted)")
+    except:
+        pass
+
+def directory_bruteforcer():
+    print("\n" + "="*18 + " DIRECTORY BRUTEFORCER " + "="*18)
+    target_url = input("[?] Enter Target URL (e.g., http://example.com): ")
+    if not target_url.startswith('http'):
+        print("[-] Invalid URL! Please include http:// or https://")
+        input("\nPress Enter to retry...")
+        return
+
+    # Built-in short wordlist scanning ke liye
+    common_folders = ["admin", "login", "uploads", "images", "config", "backup", "db", "api", "secret", "robots.txt", "index.php", "wp-admin"]
+    
+    print(f"\n[*] Starting Bruteforce Engine on: {target_url}")
+    print("[*] Thread pool active... Scanning hidden folders...")
+    print("-" * 50)
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        for folder in common_folders:
+            executor.submit(check_directory, target_url, folder)
 
     print("-" * 50)
-    print(f"[+] Scanning finished successfully.")
+    print("[+] Directory scan finished.")
     input("\nPress Enter to return to Main Menu...")
 
 # ==================== MAIN INTERFACE CONTROLLER ====================
@@ -78,7 +107,7 @@ def main_menu():
     banner()
     print("\nSelect an advanced scanning module:")
     print("[1] Smart Port Scanner & Service Detector (Ultra Fast)")
-    print("[2] Directory Bruteforcer & Hidden File Finder")
+    print("[2] Directory Bruteforcer & Hidden File Finder (New!)")
     print("[3] Subdomain Enumerator (DNS Recon)")
     print("[4] Exit Framework")
     print("-" * 60)
@@ -89,21 +118,21 @@ def main_menu():
         advanced_port_scanner()
         main_menu()
     elif choice == '2':
-        print("\n[!] Launching Directory Finder Module...")
+        directory_bruteforcer()
+        main_menu()
     elif choice == '3':
         print("\n[!] Launching Subdomain Enumerator...")
     elif choice == '4':
         print("\n[+] Exiting Framework. Goodbye!")
         sys.exit()
     else:
-        print("\n[-] Invalid option! Please select a valid module.")
-        time.sleep(2)
+        print("\n[-] Invalid option!")
+        time.sleep(1)
         main_menu()
 
 if __name__ == "__main__":
     try:
         main_menu()
     except KeyboardInterrupt:
-        print("\n\n[-] Framework interrupted by user. Exiting...")
         sys.exit()
-    
+                               
