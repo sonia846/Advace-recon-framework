@@ -8,7 +8,7 @@ An automated Python-based cybersecurity reconnaissance tool designed for fast an
 
 ## 🛠️ Installation & Usage
 ```bash
-git clone [https://github.com/sonia846/Advace-recon-framework.git](https://github.com/sonia846/Advace-recon-framework.git)
+git clone https://github.com/sonia846/Advace-recon-framework.git
 cd Advace-recon-framework
 chmod +x main.py
 ./main.py
